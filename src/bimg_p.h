@@ -10,10 +10,17 @@
 #	error "BX_CONFIG_DEBUG must be defined in build script!"
 #endif // BIMG_CONFIG_DEBUG
 
+// @@ANET add ifndef checks around each define
 #if BX_CONFIG_DEBUG
-#	define BX_TRACE  _BIMG_TRACE
-#	define BX_WARN   _BIMG_WARN
-#	define BX_ASSERT _BIMG_ASSERT
+#	ifndef BX_TRACE
+#		define BX_TRACE  _BIMG_TRACE
+#	endif // BX_TRACE
+#	ifndef BX_WARN
+#		define BX_WARN   _BIMG_WARN
+#	endif // BX_WARN
+#	ifndef BX_ASSERT
+#		define BX_ASSERT _BIMG_ASSERT
+#	endif // BX_ASSERT
 #endif // BX_CONFIG_DEBUG
 
 #define BX_ASSERT2 BX_ASSERT

@@ -316,7 +316,14 @@ namespace bimg
 		return numMips;
 	}
 
+	// @ANET this is the original function. Keep it around for backwards compat with the examples and such
 	uint32_t imageGetSize(TextureInfo* _info, uint16_t _width, uint16_t _height, uint16_t _depth, bool _cubeMap, bool _hasMips, uint16_t _numLayers, TextureFormat::Enum _format)
+	{
+		return imageGetSize(_info, _width, _height, _depth, _cubeMap, _hasMips, 0 /* numMips */, _numLayers, _format);
+	}
+
+	// @ANET add _numMips
+	uint32_t imageGetSize(TextureInfo* _info, uint16_t _width, uint16_t _height, uint16_t _depth, bool _cubeMap, bool _hasMips, uint8_t _numMips, uint16_t _numLayers, TextureFormat::Enum _format)
 	{
 		const ImageBlockInfo& blockInfo = getBlockInfo(_format);
 		const uint8_t  bpp         = blockInfo.bitsPerPixel;
@@ -329,7 +336,18 @@ namespace bimg
 		_width  = bx::max<uint16_t>(blockWidth  * minBlockX, ( (_width  + blockWidth  - 1) / blockWidth)*blockWidth);
 		_height = bx::max<uint16_t>(blockHeight * minBlockY, ( (_height + blockHeight - 1) / blockHeight)*blockHeight);
 		_depth  = bx::max<uint16_t>(1, _depth);
-		const uint8_t  numMips = calcNumMips(_hasMips, _width, _height, _depth);
+
+		uint8_t numMips = 0;
+		// @ANET take passed in _numMips if its provided
+		if (_numMips)
+		{
+			numMips = _numMips;
+		}
+		else
+		{
+			numMips = calcNumMips(_hasMips, _width, _height, _depth);
+		}
+
 		const uint32_t sides   = _cubeMap ? 6 : 1;
 
 		uint32_t width  = _width;
@@ -1338,6 +1356,7 @@ namespace bimg
 			, imageContainer.m_numLayers
 			, imageContainer.m_cubeMap
 			, 1 < imageContainer.m_numMips
+			, imageContainer.m_numMips // @@ANET
 			);
 
 		const uint16_t numSides = imageContainer.m_numLayers * (imageContainer.m_cubeMap ? 6 : 1);
@@ -3283,7 +3302,14 @@ namespace bimg
 		}
 	}
 
+	// @ANET this is the original function. Keep it around for backwards compat with the examples and such
 	ImageContainer* imageAlloc(bx::AllocatorI* _allocator, TextureFormat::Enum _format, uint16_t _width, uint16_t _height, uint16_t _depth, uint16_t _numLayers, bool _cubeMap, bool _hasMips, const void* _data)
+	{
+		return imageAlloc(_allocator, _format, _width, _height, _depth, _numLayers, _cubeMap, _hasMips, 0 /* numMips */, _data);
+	}
+
+	// @ANET added _numMips
+	ImageContainer* imageAlloc(bx::AllocatorI* _allocator, TextureFormat::Enum _format, uint16_t _width, uint16_t _height, uint16_t _depth, uint16_t _numLayers, bool _cubeMap, bool _hasMips, uint8_t _numMips, const void* _data)
 	{
 		const ImageBlockInfo& blockInfo = getBlockInfo(_format);
 		const uint16_t blockWidth  = blockInfo.blockWidth;
@@ -3296,8 +3322,15 @@ namespace bimg
 		_depth     = bx::max<uint16_t>(1, _depth);
 		_numLayers = bx::max<uint16_t>(1, _numLayers);
 
-		const uint8_t numMips = _hasMips ? imageGetNumMips(_format, _width, _height, _depth) : 1;
-		uint32_t size = imageGetSize(NULL, _width, _height, _depth, _cubeMap, _hasMips, _numLayers, _format);
+		// @ANET pass _numMips
+		uint32_t size = imageGetSize(NULL, _width, _height, _depth, _cubeMap, _hasMips, _numMips, _numLayers, _format);
+
+		// @ANET take _numMips if provided
+		uint8_t numMips = 1; // include 0th
+		if (_hasMips)
+		{
+			numMips = _numMips ? _numMips : imageGetNumMips(_format, _width, _height, _depth);
+		}
 
 		ImageContainer* imageContainer = (ImageContainer*)bx::alignedAlloc(_allocator, size + bx::alignUp(sizeof(ImageContainer), 16), 16);
 
@@ -4916,6 +4949,8 @@ namespace bimg
 		case TextureFormat::ASTC10x10:
 		case TextureFormat::ASTC12x10:
 		case TextureFormat::ASTC12x12:
+			// @@ANET added hard #if block so we if BIMG_DECODE_ASTC = 0 bimg can still link without astc symbols.
+#if BIMG_DECODE_ASTC 
 			if (BX_ENABLED(BIMG_DECODE_ASTC) )
 			{
 					const bimg::ImageBlockInfo& astcBlockInfo = bimg::getBlockInfo(_srcFormat);
@@ -4988,6 +5023,7 @@ namespace bimg
 					astcenc_context_free(context);
 			}
 			else
+#endif // BIMG_DECODE_ASTC // @@ANET
 			{
 				BX_WARN(false, "ASTC decoder is disabled (BIMG_DECODE_ASTC).");
 				imageCheckerboard(_dst, _width, _height, 16, UINT32_C(0xff000000), UINT32_C(0xff00ff00) );

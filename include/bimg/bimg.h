@@ -287,6 +287,19 @@ namespace bimg
 		, TextureFormat::Enum _format
 		);
 
+	/// @ANET overload for specific number of mips
+	uint32_t imageGetSize(
+		TextureInfo* _info
+		, uint16_t _width
+		, uint16_t _height
+		, uint16_t _depth
+		, bool _cubeMap
+		, bool _hasMips
+		, uint8_t _numMips
+		, uint16_t _numLayers
+		, TextureFormat::Enum _format
+		);
+
 	///
 	void imageSolid(
 		  void* _dst
@@ -478,6 +491,20 @@ namespace bimg
 		, uint16_t _numLayers
 		, bool _cubeMap
 		, bool _hasMips
+		, const void* _data = NULL
+		);
+
+	/// @ANET overload for specific number of mips
+	ImageContainer* imageAlloc(
+		bx::AllocatorI* _allocator
+		, TextureFormat::Enum _format
+		, uint16_t _width
+		, uint16_t _height
+		, uint16_t _depth
+		, uint16_t _numLayers
+		, bool _cubeMap
+		, bool _hasMips
+		, uint8_t _numMips
 		, const void* _data = NULL
 		);
 
