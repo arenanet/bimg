@@ -1,6 +1,8 @@
 bimg
 ====
 
+# ⚠️ This now lives in [GitLab](https://gitlab.corp.arena.net/gw2/engine-team) ⚠️
+
 Image library.
 
 [![License](https://img.shields.io/badge/license-BSD--2%20clause-blue.svg)](https://bkaradzic.github.io/bgfx/license.html)
